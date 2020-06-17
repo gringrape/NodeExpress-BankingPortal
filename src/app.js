@@ -45,6 +45,36 @@ app.get('/profile', (req, res) => {
 const userData = fs.readFileSync('src/json/users.json', {encoding: 'utf-8'});
 const users = JSON.parse(userData);
 
+app.use(express.urlencoded({extended: true}));
+
+app.get('/transfer', (req, res) => {
+  res.render('transfer');
+});
+
+app.post('/transfer', (req, res) => {
+  const {from, to, amount} = req.body;
+  accounts[from].balance -= Number.parseInt(amount); 
+  accounts[to].balance += Number.parseInt(amount);
+
+  const accountsJSON = JSON.stringify(accounts);
+  fs.writeFileSync(path.join(process.cwd(), 'src/json/accounts.json'), accountsJSON, 'UTF8');
+  res.render('transfer', { message: "Transfer Completed"});
+})
+
+app.get('/payment', (req, res) => {
+  res.render('payment', {account: accounts.credit});
+})
+
+app.post('/payment', (req, res) => {
+  const { amount } = req.body;
+  accounts.credit.balance -= amount;
+  accounts.credit.available += Number.parseInt(amount);
+
+  const accountsJSON = JSON.stringify(accounts);
+  fs.writeFileSync(path.join(process.cwd(), 'src/json/accounts.json'), accountsJSON, "utf-8");
+  res.render('payment', {message: "Payment Successful", account: accounts.credit});
+});
+
 app.listen(3000, () => {
   console.log('PS Project Running on port 3000!');
 });
